@@ -33,10 +33,10 @@ func onReady() {
 			select {
 				case <-mPom.ClickedCh:
 					fmt.Println("Clicked Pomodoro")
-					pomodoro("Pomodoro", "Focus...", 25*60)
+					pomodoro("Pomodoro - 25 minutes", "Focus...", 25*60)
 				case <-mBreak.ClickedCh:	
 					fmt.Println("Clicked Break")
-					pomodoro("Pomodoro", "Take a break!", 5*60)
+					pomodoro("Pomodoro - 5 minutes", "Take a break!", 5*60)
 			}
 		}
 	}()
@@ -51,19 +51,18 @@ func pomodoro(title string, text string, length int) {
 	defer dlg.Close()
 	
 	dlg.Text(text)
-	
-	is_closed := dlg.Done()
+	isClosedCh := dlg.Done()
 
 	for elapsed := 0; elapsed < length; elapsed++ {
 		select {
-		case _, ok := <-is_closed:
-				if !ok {
-					return
-				}
-			default:
-				var value float32 = float32(elapsed) / float32(length) * 100
-				dlg.Value(int(value))
-				time.Sleep(time.Second)
+		case _, ok := <-isClosedCh:
+			if !ok { // dialog already closed
+				return
+			}
+		default:
+			var value float32 = float32(elapsed) / float32(length) * 100
+			dlg.Value(int(value))
+			time.Sleep(time.Second)
 		}
 	}
 
